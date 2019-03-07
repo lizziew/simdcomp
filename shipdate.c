@@ -27,7 +27,7 @@ int compress_l_shipdate() {
     uint32_t* datain = malloc(N * sizeof(uint32_t)); 
 
     // Load in l_shipdate data 
-    FILE *fp = fopen("../plain_tpch/data/lineitem/l_shipdate.txt", "r");
+    FILE *fp = fopen("../plain_tpch/data/lineitem/padded_l_shipdate.txt", "r");
 
     if(fp == NULL) {
         printf("error in opening file\n");

@@ -14,6 +14,20 @@
 
 #include "utils.h"
 
+#define L_LEN 6001215
+#define N_LEN 25
+#define O_LEN 1500000
+#define C_LEN 150000
+#define S_LEN 10000
+#define R_LEN 5
+
+// #define L_LEN 59986052
+// #define N_LEN 25
+// #define O_LEN 15000000
+// #define C_LEN 1500000
+// #define S_LEN 100000
+// #define R_LEN 5
+
 using namespace std;
 using namespace tbb;
 
@@ -32,7 +46,7 @@ WHERE
   AND l_discount between 0.06 - 0.01 AND 0.06 + 0.01
   AND l_quantity < 24
 */
-/*float runQuery(float* l_extendedprice, float* l_discount, encoded_column l_shipdate, encoded_column l_quantity, bool* selection_flags, int num_items) {
+float runQuery(float* l_extendedprice, float* l_discount, uint8_t* l_shipdate, uint8_t* l_quantity, bool* selection_flags, int num_items) {
   chrono::high_resolution_clock::time_point start, finish;
   start = chrono::high_resolution_clock::now();
 
@@ -46,20 +60,20 @@ WHERE
     for (int batch_start = start; batch_start < end_batch; batch_start += BATCH_SIZE) {
       #pragma simd
       for (int i = batch_start; i < batch_start + BATCH_SIZE; i++) {
-        int curr_shipdate = get_int(l_shipdate, i);
-        selection_flags[i] = (curr_shipdate  > 19940000 && curr_shipdate  < 19950000);
-        selection_flags[i] = selection_flags[i] && (get_int(l_quantity, i) < 24);
+        // int curr_shipdate = get_int(l_shipdate, i);
+        // selection_flags[i] = (curr_shipdate  > 19940000 && curr_shipdate  < 19950000);
+        // selection_flags[i] = selection_flags[i] && (get_int(l_quantity, i) < 24);
         selection_flags[i] = selection_flags[i] && (l_discount[i] >= 0.05 && l_discount[i] <= 0.07);
         local_revenue += selection_flags[i] * (l_extendedprice[i] * l_discount[i]);
       }
     }
     for (int i = end_batch; i < end; i++) {
-      int curr_shipdate = get_int(l_shipdate, i);
-      selection_flags[i] = (curr_shipdate  > 19940000 && curr_shipdate  < 19950000);
-      selection_flags[i] = selection_flags[i] && (get_int(l_quantity, i) < 24);
+      // int curr_shipdate = get_int(l_shipdate, i);
+      // selection_flags[i] = (curr_shipdate  > 19940000 && curr_shipdate  < 19950000);
+      // selection_flags[i] = selection_flags[i] && (get_int(l_quantity, i) < 24);
       selection_flags[i] = selection_flags[i] && (l_discount[i] >= 0.05 && l_discount[i] <= 0.07);
       local_revenue += selection_flags[i] * (l_extendedprice[i] * l_discount[i]);
-    }
+    } 
     revenue.fetch_and_add(local_revenue);
   });
 
@@ -69,19 +83,19 @@ WHERE
 
   std::chrono::duration<double> diff = finish - start;
   return diff.count() * 1000;
-}*/
+}
 
 int main(int argc, char** argv) {
-  int num_trials = 3;
+  int num_trials = 1;
 
   // Load in data
   chrono::high_resolution_clock::time_point start, finish;
   start = chrono::high_resolution_clock::now();
 
-  float *l_extendedprice = loadColumn<float>("/lineitem/l_extendedprice.txt", L_LEN);
-  float *l_discount = loadColumn<float>("/lineitem/l_discount.txt", L_LEN);
-  /*encoded_column l_shipdate = loadEncodedColumn("/lineitem/l_shipdate.dat", L_LEN);
-  encoded_column l_quantity = loadEncodedColumn("/lineitem/l_quantity.dat", L_LEN);*/
+  float *l_extendedprice = loadColumn<float>("../plain_tpch/data/lineitem/l_extendedprice.txt", L_LEN);
+  float *l_discount = loadColumn<float>("../plain_tpch/data/lineitem/l_discount.txt", L_LEN);
+  uint8_t* l_shipdate = encodeColumn("../plain_tpch/data/lineitem/padded_l_shipdate.txt", L_LEN);
+  uint8_t* l_quantity = encodeColumn("../plain_tpch/data/lineitem/padded_l_quantity.txt", L_LEN);
 
   finish = chrono::high_resolution_clock::now();
   std::chrono::duration<double> diff = finish - start;
@@ -96,7 +110,7 @@ int main(int argc, char** argv) {
   }
   
   // Run trials
-  /*for (int t = 0; t < num_trials; t++) {
+  for (int t = 0; t < num_trials; t++) {
     float time_query = runQuery(l_extendedprice,
                                 l_discount,
                                 l_shipdate,
@@ -105,7 +119,7 @@ int main(int argc, char** argv) {
                                 L_LEN);
 
     cout << "{" << "\"query\":6" << ",\"time_query\":" << time_query << "}" << endl;
-  }*/
+  }
 
   return 0;
 }
