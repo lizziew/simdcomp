@@ -45,12 +45,17 @@ int compress_l_shipdate() {
     printf("encoded size: %u (original size: %u)\n", (unsigned)compsize, (unsigned)(N * sizeof(uint32_t)));
 
     // Decode
+    clock_t start, end;
+    start = clock();
     for (size_t k = 0; k * SIMDBlockSize < N; ++k) {
         uint32_t b = *buffer;
         buffer++;
         simdunpack((const __m128i *)buffer, backbuffer + k * SIMDBlockSize, b);
         buffer += b * sizeof(__m128i);
     }
+    end = clock();
+    double numberofseconds = (end-start)/(double)CLOCKS_PER_SEC;
+    printf("decoding took %f ms\n", numberofseconds/1000.0);
 
     for (size_t k = 0; k < N; ++k) {
         if(backbuffer[k] != datain[k]) {
