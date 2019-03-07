@@ -71,6 +71,9 @@ example: ./example.c    $(HEADERS) $(OBJECTS)
 shipdate: ./shipdate.c    $(HEADERS) $(OBJECTS)
 	$(CC) $(CFLAGS) -o shipdate ./shipdate.c -Iinclude  $(OBJECTS)
 
+q6_enc: ./q6_enc.cpp    $(HEADERS) $(OBJECTS)
+	g++ -std=c++14 -g -O2 -ltbb -o q6_enc ./q6_enc.cpp -Iinclude  $(OBJECTS)
+
 unit: ./tests/unit.c    $(HEADERS) $(OBJECTS)
 	$(CC) $(CFLAGS) -o unit ./tests/unit.c -Iinclude  $(OBJECTS)
 
