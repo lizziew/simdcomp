@@ -3,9 +3,9 @@
 #
 .SUFFIXES: .cpp .o .c .h
 ifeq ($(DEBUG),1)
-CFLAGS = -fPIC  -std=c89 -ggdb -march=native -Wall -Wextra -Wshadow -fsanitize=undefined  -fno-omit-frame-pointer -fsanitize=address
+CFLAGS = -fPIC  -std=c11 -ggdb -march=native -Wall -Wextra -Wshadow -fsanitize=undefined  -fno-omit-frame-pointer -fsanitize=address
 else
-CFLAGS = -fPIC -std=c89 -O3  -march=native -Wall -Wextra -Wshadow
+CFLAGS = -fPIC -std=c11 -O3  -march=native -Wall -Wextra -Wshadow
 endif # debug
 LDFLAGS = -shared
 LIBNAME=libsimdcomp.so.0.0.3
@@ -68,6 +68,9 @@ simdpackedselect.o: ./src/simdpackedselect.c $(HEADERS)
 example: ./example.c    $(HEADERS) $(OBJECTS)
 	$(CC) $(CFLAGS) -o example ./example.c -Iinclude  $(OBJECTS)
 
+shipdate: ./shipdate.c    $(HEADERS) $(OBJECTS)
+	$(CC) $(CFLAGS) -o shipdate ./shipdate.c -Iinclude  $(OBJECTS)
+
 unit: ./tests/unit.c    $(HEADERS) $(OBJECTS)
 	$(CC) $(CFLAGS) -o unit ./tests/unit.c -Iinclude  $(OBJECTS)
 
@@ -81,4 +84,4 @@ dynunit: ./tests/unit.c    $(HEADERS) $(LIBNAME)
 unit_chars: ./tests/unit_chars.c    $(HEADERS) $(OBJECTS)
 	$(CC) $(CFLAGS) -o unit_chars ./tests/unit_chars.c -Iinclude  $(OBJECTS)
 clean:
-	rm -f unit *.o $(LIBNAME) example benchmark bitpackingbenchmark dynunit unit_chars
+	rm -f unit *.o $(LIBNAME) example shipdate benchmark bitpackingbenchmark dynunit unit_chars
