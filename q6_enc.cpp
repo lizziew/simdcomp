@@ -15,19 +15,19 @@
 
 #include "utils.h"
 
-#define L_LEN 6001215
-#define N_LEN 25
-#define O_LEN 1500000
-#define C_LEN 150000
-#define S_LEN 10000
-#define R_LEN 5
-
-// #define L_LEN 59986052
+// #define L_LEN 6001215
 // #define N_LEN 25
-// #define O_LEN 15000000
-// #define C_LEN 1500000
-// #define S_LEN 100000
+// #define O_LEN 1500000
+// #define C_LEN 150000
+// #define S_LEN 10000
 // #define R_LEN 5
+
+#define L_LEN 59986052
+#define N_LEN 25
+#define O_LEN 15000000
+#define C_LEN 1500000
+#define S_LEN 100000
+#define R_LEN 5
 
 using namespace std;
 using namespace tbb;
@@ -126,10 +126,10 @@ int main(int argc, char** argv) {
   chrono::high_resolution_clock::time_point start, finish;
   start = chrono::high_resolution_clock::now();
 
-  float *l_extendedprice = loadColumn<float>("../plain_tpch/data/lineitem/l_extendedprice.txt", L_LEN);
-  float *l_discount = loadColumn<float>("../plain_tpch/data/lineitem/l_discount.txt", L_LEN);
-  uint8_t* l_shipdate = encodeColumn("../plain_tpch/data/lineitem/padded_l_shipdate.txt", L_LEN);
-  uint8_t* l_quantity = encodeColumn("../plain_tpch/data/lineitem/padded_l_quantity.txt", L_LEN);
+  float *l_extendedprice = loadColumn<float>("../plain_tpch_10/data/lineitem/l_extendedprice.txt", L_LEN);
+  float *l_discount = loadColumn<float>("../plain_tpch_10/data/lineitem/l_discount.txt", L_LEN);
+  uint8_t* l_shipdate = encodeColumn("../plain_tpch_10/data/lineitem/padded_l_shipdate.txt", L_LEN);
+  uint8_t* l_quantity = encodeColumn("../plain_tpch_10/data/lineitem/padded_l_quantity.txt", L_LEN);
 
   finish = chrono::high_resolution_clock::now();
   std::chrono::duration<double> diff = finish - start;
