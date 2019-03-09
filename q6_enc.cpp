@@ -56,34 +56,33 @@ float runQuery(float* l_extendedprice, float* l_discount, uint8_t* l_shipdate, u
   tbb::atomic<unsigned long long> revenue = 0;
   uint32_t* decoded_l_shipdate = (uint32_t*) malloc(N * sizeof(uint32_t));
   uint32_t* decoded_l_quantity = (uint32_t*) malloc(N * sizeof(uint32_t));
+
+  // Decode l_shipdate[start] ... l_shipdate[N]
+  uint8_t* l_shipdate_copy = l_shipdate;
+  #pragma simd
+  for (size_t k = 0; k * BATCH_SIZE < N; k++) {
+    uint32_t b = *l_shipdate_copy;
+    l_shipdate_copy++;
+    simdunpack((const __m128i *) l_shipdate_copy, decoded_l_shipdate + k * BATCH_SIZE, b);
+    l_shipdate_copy += b * sizeof(__m128i);
+  }
+
+  // Decode l_quantity[start] ... l_quantity[N]
+  uint8_t* l_quantity_copy = l_quantity; 
+
+  #pragma simd
+  for (size_t k = 0; k * BATCH_SIZE < N; k++) {
+    uint32_t b = *l_quantity_copy;
+    l_quantity_copy++;
+    simdunpack((const __m128i *) l_quantity_copy, decoded_l_quantity + k * BATCH_SIZE, b);
+    l_quantity_copy += b * sizeof(__m128i);
+  }
  
   parallel_for(blocked_range<size_t>(0, num_items, num_items/NUM_THREADS + 4), [&](auto range) {
     int start = range.begin();
     int end = range.end();
     int end_batch = start + ((end - start)/BATCH_SIZE) * BATCH_SIZE;
-    unsigned long long local_revenue = 0;
-
-    // Decode l_shipdate[start] ... l_shipdate[end_batch]
-    uint8_t* l_shipdate_copy = l_shipdate; 
-
-    #pragma simd
-    for (size_t k = 0; k * BATCH_SIZE < end_batch; k++) {
-      uint32_t b = *l_shipdate_copy;
-      l_shipdate_copy++;
-      simdunpack((const __m128i *) l_shipdate_copy, decoded_l_shipdate + k * BATCH_SIZE, b);
-      l_shipdate_copy += b * sizeof(__m128i);
-    }
-
-    // Decode l_quantity[start] ... l_quantity[end_batch]
-    uint8_t* l_quantity_copy = l_quantity; 
-
-    #pragma simd
-    for (size_t k = 0; k * BATCH_SIZE < end_batch; k++) {
-      uint32_t b = *l_quantity_copy;
-      l_quantity_copy++;
-      simdunpack((const __m128i *) l_quantity_copy, decoded_l_quantity + k * BATCH_SIZE, b);
-      l_quantity_copy += b * sizeof(__m128i);
-    }
+    unsigned long long local_revenue = 0; 
 
     for (int batch_start = start; batch_start < end_batch; batch_start += BATCH_SIZE) {
       #pragma simd
@@ -94,10 +93,10 @@ float runQuery(float* l_extendedprice, float* l_discount, uint8_t* l_shipdate, u
         local_revenue += selection_flags[i] * (l_extendedprice[i] * l_discount[i]);
       }
     }
+
     for (int i = end_batch; i < end; i++) {
-      // int curr_shipdate = get_int(l_shipdate, i);
-      // selection_flags[i] = (curr_shipdate  > 19940000 && curr_shipdate  < 19950000);
-      // selection_flags[i] = selection_flags[i] && (get_int(l_quantity, i) < 24);
+      selection_flags[i] = (decoded_l_shipdate[i]  > 19940000 && decoded_l_shipdate[i]  < 19950000);
+      selection_flags[i] = selection_flags[i] && (decoded_l_quantity[i] < 24);
       selection_flags[i] = selection_flags[i] && (l_discount[i] >= 0.05 && l_discount[i] <= 0.07);
       local_revenue += selection_flags[i] * (l_extendedprice[i] * l_discount[i]);
     } 
@@ -106,22 +105,22 @@ float runQuery(float* l_extendedprice, float* l_discount, uint8_t* l_shipdate, u
 
   finish = chrono::high_resolution_clock::now();
 
-  cout << "Revenue: " << revenue << endl;
+  // cout << "Revenue: " << revenue << endl;
   
-  for (int i = 0; i < 10; i++) {
-    printf("shipdate[%d] = %d\n", i, decoded_l_shipdate[i]);
-  }
+  // for (int i = 0; i < 10; i++) {
+  //   printf("shipdate[%d] = %d\n", i, decoded_l_shipdate[i]);
+  // }
 
-  for (int i = 0; i < 10; i++) {
-    printf("quantity[%d] = %d\n", i, decoded_l_quantity[i]);
-  }
+  // for (int i = 0; i < 10; i++) {
+  //   printf("quantity[%d] = %d\n", i, decoded_l_quantity[i]);
+  // }
 
   std::chrono::duration<double> diff = finish - start;
   return diff.count() * 1000;
 }
 
 int main(int argc, char** argv) {
-  int num_trials = 1;
+  int num_trials = 3;
 
   // Load in data
   chrono::high_resolution_clock::time_point start, finish;
